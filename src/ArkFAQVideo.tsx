@@ -51,7 +51,11 @@ export const ArkFAQVideo: React.FC<EnhancedVideoProps> = ({
         const sceneDuration = qFrames + padding + aFrames + endPadding;
         
         return (
-          <Series.Sequence key={`qa-${index}`} durationInFrames={sceneDuration}>
+          <Series.Sequence 
+            key={`qa-${index}`} 
+            durationInFrames={sceneDuration}
+            offset={-15}
+          >
             <FAQScene 
               {...item} 
               qDur={item.qDur!} 
@@ -63,7 +67,7 @@ export const ArkFAQVideo: React.FC<EnhancedVideoProps> = ({
 
       {/* ── 3. 片尾序列 ── */}
       {outro && outro.durationFrames && (
-        <Series.Sequence durationInFrames={outro.durationFrames}>
+        <Series.Sequence durationInFrames={outro.durationFrames} offset={-15}>
           <OutroScene 
             summaryDisplay={outro.summary_display} 
             audioPath={outro.audioPath} 

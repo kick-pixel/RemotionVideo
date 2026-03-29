@@ -74,7 +74,15 @@ export const FAQScene: React.FC<{
   qDur: number;
   aDur: number;
 }> = ({ question, answer, qAudio, aAudio, qDur, aDur }) => {
+  const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+
+  // 跨场淡入交叉渐变（配合 ArkFAQVideo 里的 offset={-15}）
+  const sceneOpacity = spring({
+    fps,
+    frame,
+    config: { damping: 20, stiffness: 200 },
+  });
 
   const qAudioFrames = Math.ceil(qDur * fps);
   const aAudioFrames = Math.ceil(aDur * fps);
@@ -89,6 +97,7 @@ export const FAQScene: React.FC<{
       style={{
         background: '#f5efe0',
         overflow: 'hidden',
+        opacity: sceneOpacity,
       }}
     >
       {/* ── Diagonal crosshatch texture (matches reference images) ── */}

@@ -1,63 +1,53 @@
 {
   "intro": {
-    "theme_title": "语音合成",
-    "theme_subtitle": "《千问TTS全模型解析》",
-    "audio": "嗨，今天咱们来聊聊阿里千问TTS！这个语音合成引擎不仅能说多国语言、各种方言，还能克隆你的声音，甚至用一句话就能控制情绪语气，一起来看看怎么选型吧！"
+    "theme_title": "React 新架构",
+    "theme_subtitle": "《Server Components 到底革了谁的命？》",
+    "audio": "聊聊 RSC 新玩法！"
   },
   "qa": [
     {
       "name_q": "q1",
       "name_a": "a1",
-      "question": "千问TTS到底能干啥？和普通语音合成有啥不一样？",
-      "answer": "千问TTS是阿里云推出的高拟真语音合成服务，核心亮点在于多语言覆盖、方言支持、以及两大定制能力——声音复刻和声音设计。最特别的是它的指令控制功能，你可以直接用自然语言描述，比如'语速较快，带有明显的上扬语调'，就能精确控制语音的表现力，完全不需要调复杂的音频参数。",
-      "question_display": "千问TTS<hl>核心能力</hl>？",
-      "answer_display": "多语言+方言+<hl>指令控制</hl>语气",
+      "question": "哎，最近总听人说 RSC，这到底是个啥啊？跟咱们以前写的 React 组件有啥不一样？",
+      "answer": "其实就是个新思路！以前组件都在浏览器里跑，RSC 呢，它只在服务器上执行——最关键的是，它不会往客户端塞任何 JS 代码，bundle 一下子就瘦下来了。",
+      "question_display": "RSC 是什么？",
+      "answer_display": "服务端执行，<hl>零 JS</hl> 下发",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q2",
       "name_a": "a2",
-      "question": "我看到有好多模型，qwen3-tts-flash、instruct-flash、VD、VC，这些到底怎么选？",
-      "answer": "选模型要看你的场景需求。如果要做有声书、广播剧、游戏配音这种需要丰富情感表达的，选qwen3-tts-instruct-flash，它支持指令控制。如果想从零设计一个品牌专属声音，用qwen3-tts-vd做声音设计。如果要克隆真人声音，用qwen3-tts-vc。如果只是导航播报、课件配音这种简单场景，qwen3-tts-flash性价比最高，按字符计费很透明。",
-      "question_display": "<hl>五大模型</hl>怎么选？",
-      "answer_display": "情感配音→<hl>Instruct</hl>，定制音色→VD/VC",
+      "question": "哇，那可太爽了！不过为啥能减少 JS 呢？数据不还是得拿吗？",
+      "answer": "对对对，这就是最妙的地方！以前你得先加载 JS，再跑组件，再去请求数据——一层套一层跟瀑布似的。RSC 直接在服务端读数据库、读文件，处理完了直接把 HTML 或者 JSON 扔给浏览器，一步到位！",
+      "question_display": "怎么减少 JS？",
+      "answer_display": "服务端直接<hl>读库</hl>，跳过瀑布请求",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q3",
       "name_a": "a3",
-      "question": "声音复刻和声音设计具体怎么用？有什么区别？",
-      "answer": "声音复刻是基于你的音频样本来克隆音色，比如你录一段自己的声音，就能生成专属voice参数，后续合成时用这个参数就能输出你的声音。声音设计更神奇，不需要任何音频样本，直接用文字描述，比如'沉稳的中年男性播音员，音色低沉浑厚'，系统就能生成对应的音色。复刻适合还原真人，设计适合创造虚拟角色。",
-      "question_display": "<hl>复刻</hl>vs<hl>设计</hl>区别？",
-      "answer_display": "复刻靠<hl>音频样本</hl>，设计靠<hl>文本描述</hl>",
+      "question": "哦~ 原来是这样！但要是有些按钮点击、表单交互这些，服务端组件能搞定吗？",
+      "answer": "搞不定，所以这就是它聪明的地方嘛！RSC 可以和传统的 Client Components 混着用——静态展示走服务端，交互逻辑走客户端，两边不耽误。",
+      "question_display": "交互怎么办？",
+      "answer_display": "RSC + <hl>Client</hl> 组件混用",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q4",
       "name_a": "a4",
-      "question": "指令控制具体能控制哪些维度？写描述有什么技巧？",
-      "answer": "指令控制可以调节音调高低、语速快慢、情感状态、音色特点，还能指定用途风格。写描述要遵循四个原则：具体而非模糊，比如用'低沉'代替'好听'；多维而非单一，组合音调、语速、情感多个维度；客观而非主观，描述声音物理特征；简洁而非冗余。比如'温柔治愈风格：语速偏慢，音调温柔甜美，语气治愈温暖'，这样效果就很清晰。",
-      "question_display": "<hl>指令控制</hl>怎么写？",
-      "answer_display": "<hl>音调</hl>+<hl>语速</hl>+<hl>情感</hl>多维度描述",
-      "character_q": "fox",
-      "character_a": "bunny"
-    },
-    {
-      "name_q": "q5",
-      "name_a": "a5",
-      "question": "调用的时候要注意什么？流式和非流式怎么选？",
-      "answer": "首先注意地域，中国内地选北京地域的API Key，国际选新加坡，两个地域的Key不通用。流式输出适合实时播放场景，比如语音助手，可以边合成边播放，音频数据用Base64编码分段返回。非流式输出直接返回URL，24小时内有效，适合批量生产后存储使用。代码里Python和Java SDK都支持，注意SDK版本要够新，Python不低于1.24.6，Java不低于2.21.9。",
-      "question_display": "<hl>流式</hl>vs<hl>非流式</hl>？",
-      "answer_display": "实时播放→<hl>流式</hl>，批量存储→<hl>非流式</hl>",
+      "question": "这就有意思了！那说白了，它是不是把 SSR 和 CSR 的优点都给占了？",
+      "answer": "没错！简单来说就是——SSR 的性能，CSR 的体验，两头甜。",
+      "question_display": "核心价值是？",
+      "answer_display": "<hl>SSR 性能</hl> + <hl>CSR 体验</hl>",
       "character_q": "fox",
       "character_a": "bunny"
     }
   ],
   "outro": {
-    "summary_display": "- Instruct模型：情感配音首选，支持自然语言指令控制\n- VD模型：零样本设计品牌专属音色\n- VC模型：音频克隆，还原真人声纹\n- Flash模型：高性价比，适合播报类场景\n- 注意地域：北京/新加坡API Key不互通",
-    "audio": "总结一下，千问TTS的核心就是模型选对、描述写准、地域别错。情感化内容选Instruct，定制音色用VD或VC，简单场景Flash最划算。记得关注我，获取更多面试资料和面试指导！"
+    "summary_display": "- 服务端零 JS 下发，bundle 极致瘦身\n- 服务端直接读库，消灭请求瀑布\n- 服务端 + 客户端组件灵活搭配",
+    "audio": "RSC 就是服务端渲染新答案，性能体验两手抓。关注我，获取更多面试资料和面试指导！"
   }
 }

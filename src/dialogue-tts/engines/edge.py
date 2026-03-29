@@ -31,7 +31,8 @@ class EdgeTTSEngine(TTSEngine):
         last_err: Exception | None = None
         for attempt in range(MAX_RETRIES):
             try:
-                communicate = edge_tts.Communicate(text, voice)
+                # 增加 '+15%' 的语速，让语气更连贯、更有播客的活力感
+                communicate = edge_tts.Communicate(text, voice, rate="+15%")
                 await communicate.save(str(mp3_path))
                 return mp3_path
             except Exception as e:

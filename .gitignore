@@ -1,7 +1,61 @@
-node_modules
-dist
-.DS_Store
-.env
+# ==============================
+# Node.js & React (Remotion)
+# ==============================
+node_modules/
+dist/
+build/
+.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-# Ignore the output video from Git but not videos you import into src/.
-out
+# ==============================
+# Python Scripts
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# ==============================
+# Environment & IDE
+# ==============================
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/
+
+# ==============================
+# Remotion & Project Specific Data
+# ==============================
+out/
+.remotion/
+public/audio/*.mp3
+public/data/*.json
+public/data/**/*.json
+public/images/bak/
+*.log
+resource/
+
+debug.*

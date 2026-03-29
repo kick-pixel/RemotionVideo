@@ -7,10 +7,12 @@
   "private": true,
   "dependencies": {
     "@remotion/cli": "4.0.441",
+    "@remotion/media-utils": "^4.0.441",
+    "@remotion/tailwind-v4": "4.0.441",
+    "mediabunny": "^1.40.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "remotion": "4.0.441",
-    "@remotion/tailwind-v4": "4.0.441",
     "tailwindcss": "4.0.0"
   },
   "devDependencies": {
@@ -24,6 +26,8 @@
   "scripts": {
     "dev": "remotion studio",
     "build": "remotion bundle",
+    "render": "remotion render src/index.ts ArkFAQ out/video.mp4",
+    "build:dynamic": "remotion render src/index.ts ArkFAQ out/video.mp4 --props public/data/render_props.json",
     "upgrade": "remotion upgrade",
     "lint": "eslint src && tsc"
   },

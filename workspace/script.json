@@ -1,53 +1,63 @@
 {
   "intro": {
-    "theme_title": "React 新架构",
-    "theme_subtitle": "《Server Components 到底革了谁的命？》",
-    "audio": "聊聊 RSC 新玩法！"
+    "theme_title": "React Server Components",
+    "theme_subtitle": "《RSC 到底革了谁的命？》",
+    "audio": "哈喽大家好，今天咱们把 RSC 彻底聊透！"
   },
   "qa": [
     {
       "name_q": "q1",
       "name_a": "a1",
-      "question": "哎，最近总听人说 RSC，这到底是个啥啊？跟咱们以前写的 React 组件有啥不一样？",
-      "answer": "其实就是个新思路！以前组件都在浏览器里跑，RSC 呢，它只在服务器上执行——最关键的是，它不会往客户端塞任何 JS 代码，bundle 一下子就瘦下来了。",
-      "question_display": "RSC 是什么？",
-      "answer_display": "服务端执行，<hl>零 JS</hl> 下发",
+      "question": "哎，我最近老听说 RSC 这个玩意儿，它跟咱们以前写的 React 组件到底有啥不一样啊？",
+      "answer": "哦~ 这个区别可大了！你想啊，以前的组件都是在浏览器里跑的，RSC 呢，它压根就不往客户端跑，纯在服务器上执行完，直接把结果丢给浏览器。所以啊，它不会往你前端 bundle 里塞任何 JS 代码，包体积直接砍一大截！",
+      "question_display": "RSC 到底<hl>新</hl>在哪？",
+      "answer_display": "只在<hl>服务端</hl>跑，不往客户端发 JS",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q2",
       "name_a": "a2",
-      "question": "哇，那可太爽了！不过为啥能减少 JS 呢？数据不还是得拿吗？",
-      "answer": "对对对，这就是最妙的地方！以前你得先加载 JS，再跑组件，再去请求数据——一层套一层跟瀑布似的。RSC 直接在服务端读数据库、读文件，处理完了直接把 HTML 或者 JSON 扔给浏览器，一步到位！",
-      "question_display": "怎么减少 JS？",
-      "answer_display": "服务端直接<hl>读库</hl>，跳过瀑布请求",
+      "question": "哇，那这性能提升从哪来啊？我总感觉以前 React 也挺快的呀？",
+      "answer": "嘿嘿，这里有个坑！以前 CSR 的时候，你得先下 JS，再执行，执行完了再去请求数据，一层套一层，这就是传说中的'瀑布流'请求。RSC 呢，直接在服务器上读数据库、读文件，数据拿好了、组件渲染完了，一次性把成品塞给浏览器，一步到位，省了多少往返啊！",
+      "question_display": "性能提升的<hl>秘密</hl>？",
+      "answer_display": "消灭<hl>瀑布流</hl>请求，服务端直接取数据",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q3",
       "name_a": "a3",
-      "question": "哦~ 原来是这样！但要是有些按钮点击、表单交互这些，服务端组件能搞定吗？",
-      "answer": "搞不定，所以这就是它聪明的地方嘛！RSC 可以和传统的 Client Components 混着用——静态展示走服务端，交互逻辑走客户端，两边不耽误。",
-      "question_display": "交互怎么办？",
-      "answer_display": "RSC + <hl>Client</hl> 组件混用",
+      "question": "哎等等，那要是有些组件需要交互呢？比如点个按钮弹个窗啥的，这 RSC 能搞定吗？",
+      "answer": "对对对，问到点子上了！RSC 自己是不带交互能力的，毕竟它没 JS 嘛。但你可以把它跟传统的 Client Components 混着用啊！静态的、数据重的扔给 RSC，需要点击、动画、状态管理的再包一层 Client Component，两边各干各的擅长的，完美！",
+      "question_display": "交互<hl>怎么办</hl>？",
+      "answer_display": "RSC + <hl>Client</hl> 组件混用，各取所长",
       "character_q": "fox",
       "character_a": "bunny"
     },
     {
       "name_q": "q4",
       "name_a": "a4",
-      "question": "这就有意思了！那说白了，它是不是把 SSR 和 CSR 的优点都给占了？",
-      "answer": "没错！简单来说就是——SSR 的性能，CSR 的体验，两头甜。",
-      "question_display": "核心价值是？",
-      "answer_display": "<hl>SSR 性能</hl> + <hl>CSR 体验</hl>",
+      "question": "哦~ 原来是这样！那说白了，RSC 是不是就是 SSR 的升级版啊？",
+      "answer": "嗯……其实不完全对。SSR 呢，是把你整个页面先在服务器渲染成 HTML，但 hydration 的时候还是要下载全套 JS。RSC 更狠，部分组件直接'零 JS 上船'，而且它能细粒度到单个组件级别去控制。简单说就是——SSR 管页面，RSC 管组件，它俩还能一起用，这才是最骚的！",
+      "question_display": "RSC 等于 <hl>SSR</hl>？",
+      "answer_display": "比 SSR 更细粒度，<hl>组件级</hl>控制 + 零 JS",
+      "character_q": "fox",
+      "character_a": "bunny"
+    },
+    {
+      "name_q": "q5",
+      "name_a": "a5",
+      "question": "懂了懂了！所以最后总结一下，RSC 这玩意儿最适合什么场景啊？",
+      "answer": "其实啊，只要你页面里有大量数据展示、又不怎么需要交互的地方，上 RSC 就对了！后台管理、内容详情页、商品列表这些，bundle 体积能小一大半，首屏速度飞起。当然，别滥用，该用 Client 的地方还得用，关键是——你得想清楚这组件到底需不需要跑在浏览器里！",
+      "question_display": "什么<hl>场景</hl>适合用？",
+      "answer_display": "数据重、<hl>交互少</hl>的页面，bundle 瘦身利器",
       "character_q": "fox",
       "character_a": "bunny"
     }
   ],
   "outro": {
-    "summary_display": "- 服务端零 JS 下发，bundle 极致瘦身\n- 服务端直接读库，消灭请求瀑布\n- 服务端 + 客户端组件灵活搭配",
-    "audio": "RSC 就是服务端渲染新答案，性能体验两手抓。关注我，获取更多面试资料和面试指导！"
+    "summary_display": "- <hl>零 JS 体积</hl>：服务端组件不往客户端发代码\n- <hl>消灭瀑布流</hl>：服务端直接取数据渲染\n- <hl>混用架构</hl>：RSC + Client 组件各取所长",
+    "audio": "记住这三点，RSC 你就入门了。关注我，获取更多面试资料和面试指导！"
   }
 }

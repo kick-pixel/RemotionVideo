@@ -1,0 +1,61 @@
+{
+  "intro": {
+    "theme_title": "架构七件套",
+    "theme_subtitle":《1000万订单查询优化》",
+    "audio": "哈喽大家好，面试官问你1000万订单怎么优化怎么破？"
+  },
+  "qa": [
+    {
+      "name_q": "q1",
+      "question": "面试官问我加索引分库分表，为啥说这思路完全错了？",
+      "question_display": "<hl>单点优化</hl> 为何失效",
+      "character_q": "bunny",
+      "name_a": "a1",
+      "answer": "其实啊，这不是DB调优题，是业务生死线。根因是架构套件体系缺失，用单一MySQL硬扛读写混杂、冷热不分、快慢不隔，系统直接失去弹性。",
+      "answer_display": "缺失<hl>架构套件</hl>，单点硬扛必崩",
+      "character_a": "fox",
+      "visual_type": "layers",
+      "visual_labels": ["流量层", "服务层", "存储层"]
+    },
+    {
+      "name_q": "q2",
+      "question": "正确架构思维是啥？总不能每个问题都造轮子吧？",
+      "question_display": "<hl>七大套件</hl> 如何协同",
+      "character_q": "bunny",
+      "name_a": "a2",
+      "answer": "简单来说，七大套件协同防御。流量三件套守入口，服务三件套释放潜力，缓存三件套筑防线，MQ三件套保异步可靠，搜索四件套提检索，存储四件套破瓶颈，一致性两件套兜底。",
+      "answer_display": "<hl>套件化</hl> 替代碎片化修补",
+      "character_a": "fox",
+      "visual_type": "tree",
+      "visual_labels": ["七大套件", "入口防御", "存储攻坚"]
+    },
+    {
+      "name_q": "q3",
+      "question": "MySQL+CDC+HBase+ClickHouse搞这么复杂，HBase和ClickHouse不都是LSM-Tree吗？",
+      "question_display": "同样<hl>LSM-Tree</hl> 差距在哪",
+      "character_q": "bunny",
+      "name_a": "a3",
+      "answer": "核心在于场景适配改造不同。HBase做高并发随机读写优化，定位在线点查；ClickHouse结合列存做批量聚合优化，定位统计分析。同样底层，设计目标完全不同。",
+      "answer_display": "<hl>分层适配</hl> 而非堆砌技术",
+      "character_a": "fox",
+      "visual_type": "compare",
+      "visual_labels": ["HBase点查", "CK分析"]
+    },
+    {
+      "name_q": "q4",
+      "question": "缓存三件套都做了还穿透，面试官是不是在挖坑？",
+      "question_display": "<hl>穿透</hl> 如何终极兜底",
+      "character_q": "bunny",
+      "name_a": "a4",
+      "answer": "其实是在考全链路思维。要排查布隆过滤器是否覆盖HBase历史ID，空值缓存是否覆盖CK分析条件，CDC延迟是否导致新订单查不到。终极兜底是网关拦截加穿透熔断加多级补偿。",
+      "answer_display": "<hl>预判漏洞</hl> 而非事后补救",
+      "character_a": "fox",
+      "visual_type": "flow",
+      "visual_labels": ["网关拦截", "缓存防御", "存储兜底"]
+    }
+  ],
+  "outro": {
+    "summary_display": "- 架构套件化替代单点调优\n- 七大套件分层协同防御\n- 存储分层适配场景而非堆砌技术",
+    "audio": "记住，大厂要的是系统性架构思维，不是解决一个点，而是构建可复用可演进的套件体系。关注我，获取更多面试资料和面试指导！"
+  }
+}

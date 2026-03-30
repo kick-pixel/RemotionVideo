@@ -1,60 +1,76 @@
 {
   "intro": {
-    "theme_title": "零 JS 下发",
-    "theme_subtitle": "《React Server Components 彻底搞懂》",
-    "audio": "hello大家好，今天咱们聊聊 RSC，到底牛在哪？"
+    "theme_title": "架构七套件",
+    "theme_subtitle": "《千万订单查询优化实战》",
+    "audio": "哈喽大家好，阿里面试常考的千万订单查询优化，今天用架构套件思维来破解！"
   },
   "qa": [
     {
       "name_q": "q1",
-      "question": "传统 React 组件啊... 听说首屏特别慢，这是为啥？",
-      "question_display": "传统 React <hl>首屏慢</hl> 在哪？",
+      "question": "每天1000万订单查询，加索引升配置为啥扛不住？",
+      "question_display": "根因是<hl>缺套件</hl>",
       "character_q": "bunny",
       "name_a": "a1",
-      "answer": "对对对，其实啊... 传统 CSR 呢，所有 JS 代码啊... 都得下发到浏览器。组件越多呢，包就越大，首屏自然就卡住了！",
-      "answer_display": "JS 全丢给 <hl>浏览器</hl>，包体积爆炸",
+      "answer": "其实啊，表象是MySQL过载，根因是架构套件体系缺失。所有读写、热冷、快慢流量全压单一主库，系统失去弹性容错能力，这不是调优题，是架构生死线。",
+      "answer_display": "单一数据库硬扛所有场景，<hl>分层治理缺失</hl>",
       "character_a": "fox",
-      "visual_type": "compare",
+      "visual_type": "layers",
       "visual_labels": [
-        "CSR 大包",
-        "RSC 零 JS"
+        "流量层",
+        "服务层",
+        "存储层"
       ]
     },
     {
       "name_q": "q2",
-      "question": "那 RSC 说零 JS 下发... 具体怎么做到的？",
-      "question_display": "RSC <hl>零 JS</hl> 怎么实现？",
+      "question": "七大架构套件怎么协同构建全链路防御？",
+      "question_display": "七大<hl>套件</hl>全景图",
       "character_q": "bunny",
       "name_a": "a2",
-      "answer": "简单来说就是... 服务端组件啊... 直接在服务器跑完，客户端只收到精简的标记，类似 HTML。没有 JS，没有 Hydration，体积直接归零！",
-      "answer_display": "服务端渲染完，只发 <hl>纯标记</hl>",
+      "answer": "简单来说，流量三件套守入口，服务三件套释放潜力，缓存三件套防穿透击穿雪崩，MQ三件套保异步可靠，搜索四件套提检索效率，存储四件套破解瓶颈，一致性两件套平衡性能可靠。",
+      "answer_display": "七大套件<hl>分层协同</hl>，替代碎片优化",
       "character_a": "fox",
-      "visual_type": "flow",
+      "visual_type": "tree",
       "visual_labels": [
-        "服务端",
-        "渲染组件",
-        "发标记"
+        "七大套件",
+        "入口防御",
+        "核心能力"
       ]
     },
     {
       "name_q": "q3",
-      "question": "还有个说法... 能直接查数据库？不用写接口了？",
-      "question_display": "组件里直接 <hl>查数据库</hl>？",
+      "question": "存储层四件套具体怎么落地？三者如何分工？",
+      "question_display": "存储<hl>冷热分离</hl>",
       "character_q": "bunny",
       "name_a": "a3",
-      "answer": "这就有意思了！因为跑在服务端嘛... 你直接写 await db.query() 就行。省掉一层 API，代码少写一半，数据还更快拿到手！",
-      "answer_display": "await db.query()，<hl>零 API</hl> 层",
+      "answer": "核心在于分而治之。MySQL存近30天热数据，保强一致毫秒点查。HBase经CDC同步存30天以上温冷数据，承接历史订单点查。ClickHouse经ETL同步存分析副本，承接报表统计批量扫描。",
+      "answer_display": "MySQL点查，HBase历史，<hl>ClickHouse分析</hl>",
       "character_a": "fox",
-      "visual_type": "layers",
+      "visual_type": "flow",
       "visual_labels": [
-        "组件层",
-        "直连数据库",
-        "无 API"
+        "MySQL热库",
+        "CDC同步",
+        "HBase+ClickHouse"
+      ]
+    },
+    {
+      "name_q": "q4",
+      "question": "HBase和ClickHouse都用LSM-Tree，差距为啥这么大？",
+      "question_display": "LSM-Tree<hl>场景适配</hl>",
+      "character_q": "bunny",
+      "name_a": "a4",
+      "answer": "核心在于适配改造不同。HBase优化高并发随机读写，Region分区服务点查。ClickHouse结合列存优化批量聚合，MergeTree服务分析扫描。用HBase做分析会超时，用ClickHouse做点查会延迟爆炸。",
+      "answer_display": "同底层不同改造，<hl>场景适配</hl>决定性能",
+      "character_a": "fox",
+      "visual_type": "compare",
+      "visual_labels": [
+        "HBase点查",
+        "ClickHouse分析"
       ]
     }
   ],
   "outro": {
-    "summary_display": "- RSC 零 JS 下发，首屏极速\n- 服务端直查 DB，砍掉 API 层\n- 组件级服务端渲染，体积归零",
-    "audio": "所以啊，RSC 就是服务端渲染的终极形态！关注我，获取更多面试资料和面试指导！"
+    "summary_display": "- 架构套件化思维：七大套件分层协同，替代单点碎片优化\n- 存储冷热分离：MySQL+HBase+ClickHouse各司其职，热低延迟、冷低成本、分析高吞吐\n- 场景适配原则：同技术不同改造，选对引擎比用好引擎更重要",
+    "audio": "记住，大厂面试要的是体系化架构思维，不是单点技巧。关注我，获取更多面试资料和面试指导！"
   }
 }

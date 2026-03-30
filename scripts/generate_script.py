@@ -16,7 +16,6 @@ except ImportError:
 load_dotenv()
 
 # 读取 OpenAI 配置
-# 如果没有独立设置 OPENAI_...，可以 fallback 到 DASHSCOPE 方案
 API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("DASHSCOPE_API_KEY")
 BASE_URL = os.getenv("OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
 MODEL = os.getenv("OPENAI_MODEL", "qwen-plus")
@@ -30,156 +29,257 @@ client = openai.OpenAI(
     base_url=BASE_URL,
 )
 
-SYSTEM_PROMPT = """你是一个专业的技术科普短视频剧本作家。
-用户的输入将是一篇技术文档或一段技术主题说明。
-你的任务是将这些核心概念转化为一段完整的短视频剧本，包含“片头引首”、“3轮渐进问答”以及“片尾总结引流”三个部分。
+# ── Step 1 Prompt：忠实于文章主旨，提炼选题 ─────────────────────────────────
+#
+# 核心策略：
+#   文章标题 + 引言 = 作者最想表达的核心主旨，必须优先尊重。
+#   3~4轮QA的叙事结构要求：
+#     Q1 → 建立"为什么会有这个问题"的认知（痛点 + 根因）
+#     Q2 → 揭示"核心解法框架是什么"（文章主旨的核心技术方案全貌）
+#     Q3 → 深挖"最值得面试官追问的技术细节"（有具体的对比/因果/数字）
+#     Q4 → (可选) 补充的高阶思辨或扩展细节
+#
+ANALYSIS_PROMPT = """你是一个技术短视频选题专家。请对以下技术文档进行分析，输出一份"剧本选题规划"。
 
-要求：
-1. 【片头 Intro】：提炼最凝练直白的主题字眼作为第一级大字视觉（theme_title），然后辅以稍微具备说明性的副标题（theme_subtitle）。配上一句**极度简短（控制在10-15个字左右，3秒内能说完）的口播引出本期内容。必须先打招呼再引出主题**，例如使用这种口语化句式：“哈喽大家好，今天咱们一起聊聊xxx” 或者 “hello大家好，面试官问你xxx，怎么破？”。
-2. 【正片 QA】：提取文档最核心的 **3个** 概念，改为 **恰好3轮** 递进问答（禁止超过3轮）。
-   - Q、A分别有 `question`（听觉口播长文本）和 `question_display`（视觉极简大字报文本）。
-   - _display 文本里允许在核心词包裹 `<hl>关键</hl>` 标签（不超过5个字）。
-   - Q 的角色固定为 "bunny"（提问者），A 固定为 "fox"（解答专家）。
-   - **字数严格限制（非常重要！影响视频时长）**：
-     - `question` 口播文本：**严格不超过30个汉字**，1-2句话点到为止
-     - `answer` 口播文本：**严格不超过100个汉字**，3-4句话说清核心即可，禁止啰嗦展开
-   - **口语化与节奏要求（非常关键，由于TTS语速极快，必须强行加入喘息停顿）**：
-     - 使用聊天播客语气，多用"对对对"、"其实啊"、"简单来说就是"、"这就有意思了"等口语连接词。
-     - **【呼吸控制规则】**：每句话不要超过15个汉字就必须加入标点。强行多用**逗号（，）**和**省略号（...）**来切断长句。比如：“传统 React 呢，组件啊... 都挤在客户端，导致包非常大！”（这样的标点能让机器TTS自然停顿、表现得更像真人播客思考的样子）
-     - 避免过分严肃，想象两个极客边喝咖啡边简短直接地说要点。
-   - **动态图解参数（极其重要，必须严格按照以下决策规则选择）**：视频右下角会根据你的参数自动渲染一个科技感动图。请根据本回合**回答的核心语义**，从以下9种类型中精准选择一种：
+━━━━━━━━━━━━━━━━【分析规则 - 必须严格遵守】━━━━━━━━━━━━━━━━
 
-      **【type 选择决策树 - 必须严格对号入座，禁止随意猜测】**:
-      
-      ▸ 选 `"flow"` → 回答涉及：**请求/数据从A到B的传递过程**、**系统组件间的调用链**、**渲染/工作流程**、**架构拓扑**
-        渲染效果：3个方框节点从左到右用连线连起来，节点上显示labels中的词
-        适用例：RSC渲染流程、API调用链路、Nginx→后端→DB、事件从发出到消费
-        labels：3个流程节点，顺序即流程顺序。例：`["浏览器", "服务端", "DB"]`
+**第一原则：忠实于文章主旨**
+文章的标题和引言明确告诉你这篇文章在讲什么——这是作者认为最重要的内容，必须作为剧本核心主题。
+不要用"找最硬核技术细节"的思路来绕过或替换文章的显式主题。
 
-      ▸ 选 `"database"` → 回答涉及：**缓存/存储方式**、**数据库结构**、**存储层级**、**连接池/Buffer/Cache**
-        渲染效果：磁盘圆柱堆叠图，旁边贴两个浮动标签
-        适用例：Redis缓存穿透、MySQL索引、连接池复用、多级缓存
-        labels：2个核心存储对象名。例：`["Redis", "MySQL"]` 或 `["热数据", "冷数据"]`
+**叙事结构（规划 3 到 4 轮，视文档深度而定）**：
 
-      ▸ 选 `"speed"` → 回答涉及：**性能快慢对比**、**延迟/耗时减少**、**吞吐量提升**、**具体数字化性能差距**
-        渲染效果：圆形仪表盘+摆动指针，左右各一个对比标签
-        适用例：首屏从3s到0.3s、接口从200ms到20ms、QPS翻10倍
-        labels：2个对比项，左=慢/旧，右=快/新。例：`["传统SSR", "RSC"]`
+【Q1 - 建立问题认知】
+  目标：让观众理解"为什么会有这个问题？根因是什么？"
+  内容来源：文章的问题描述章节（通常是第2章前半段）
+  要求：说清楚痛点场景 + 根因诊断，不要只说"这题考架构思维"这种泛话
 
-      ▸ 选 `"code"` → 回答涉及：**具体API/指令语法**、**函数调用方式**、**协议/格式规范**、**配置项写法**
-        渲染效果：大字体 `<label />` 代码括号样式，下方贴一个术语标签
-        适用例：use client指令、async/await用法、Dockerfile语法、HTTP头规范
-        labels：index 0=API/指令名（不超过10字符），index 1=简短说明。例：`["use client", "客户端"]`
+【Q2 - 核心解法框架】
+  目标：让观众看清"文章的核心解法体系全貌"——这是文章价值最高的部分
+  内容来源：文章的核心方案章节（通常是提出"X大套件/Y层架构"的总览章节）
+  要求：必须说出解法体系的"结构感"，让人清楚有几个层次、分别解决什么问题
 
-      ▸ 选 `"compare"` → 回答涉及：**两种方案的优劣对比**、**有/无某功能的差异**、**新旧技术的取舍**
-        渲染效果：左右两块卡片并排，中间有VS分割线，左=旧/坏，右=新/好
-        适用例：有缓存vs无缓存、CSR vs SSR、monolith vs 微服务、加锁vs无锁
-        labels：index 0=左侧（旧/差），index 1=右侧（新/好）。例：`["CSR", "SSR"]`
+【Q3 - 深入技术细节】
+  目标：深挖具体的对比关系或因果逻辑
+  内容来源：架构中的某个重要组件/机制
+  要求：必须有具体的技术名词、有对比关系（A vs B）或因果关系（因为X所以Y）
 
-      ▸ 选 `"layers"` → 回答涉及：**技术分层架构**、**抽象层级**、**OSI模型/协议栈**、**前端/后端/基础设施的层次关系**
-        渲染效果：3层堆叠的矩形，从上到下颜色渐深，每层显示一个名称
-        适用例：前端→后端→DB三层架构、React组件树、容器层/运行时层/内核层
-        labels：3个层名，从上到下排列。例：`["前端", "后端", "数据库"]`
+【Q4 - 最佳面试追问（可选）】
+  目标：如果前3轮不足以讲透，补充最反直觉的技术考察点或收尾总结
+  要求：用充满压迫感的追问或进阶场景收尾，制造深度感
 
-      ▸ 选 `"tree"` → 回答涉及：**父子关系/继承**、**组件树/依赖图**、**分类/分支结构**、**递归拆解**
-        渲染效果：1个根节点在上，下方用弧线分连2个子节点
-        适用例：React组件树、类继承关系、目录结构、算法分治
-        labels：index 0=根节点，index 1=左子节点，index 2=右子节点。例：`["App", "Header", "Body"]`
+━━━━━━━━━━━━━━━━【输出格式】━━━━━━━━━━━━━━━━
 
-      ▸ 选 `"timeline"` → 回答涉及：**事件执行顺序**、**生命周期钩子先后**、**异步操作时序**、**步骤必须按顺序发生**
-        渲染效果：横向时间轴，3个步骤点依次弹出，标签交替上下显示
-        适用例：async/await执行顺序、React生命周期、Webpack打包流程、请求→响应→渲染
-        labels：3个按顺序的步骤名。例：`["请求", "处理", "响应"]`
+请输出以下项，纯文字，无需JSON：
 
-      ▸ 选 `"lock"` → 回答涉及：**身份验证/鉴权**、**加密/解密**、**Token/密钥**、**权限控制**、**安全协议**
-        渲染效果：锁形图标居中，两条椭圆轨道持续旋转，代表加密保护
-        适用例：JWT签名、OAuth2授权、HTTPS握手、RBAC权限、密码Hash
-        labels：index 0=核心安全机制名，index 1=作用说明。例：`["JWT", "鉴权"]`
+**核心主题**：（一句话，直接描述文章最想传达的知识点，忠实于标题表述）
 
-      **【labels 统一规范 - 每个词严格不超过5个字，不要写长句】**：
-      ❌ 错误：`["首屏极速加载体验", "服务端渲染无JS"]`  
-      ✅ 正确：`["传统SSR", "RSC"]` 或 `["浏览器", "服务端", "DB"]`
-3. 【片尾 Outro】：精简提炼 **2-3 条**核心知识点（不要过多）作为画面展示，并在口播文案尾部带上“关注我，获取更多面试资料和面试指导”的引流话术。片尾口播要简短，不超过 2-3 句。
-4. 输出格式必须严格是含有JSON的文本，**返回一个 JSON 对象**而不是数组。直接回复纯 JSON 对象（可以使用 ```json 格式块）。
+**Q1 选题**
+- 问题：bunny 如何提问（口语化，带好奇/困惑感）
+- 要点：fox 用1-2句话的核心回答
+- 来源章节：
 
-JSON 格式要求：
+**Q2 选题**
+- ...以此类推
+
+（如果有必要，可输出 Q4 选题）
+"""
+
+# ── Step 2 Prompt：基于选题规划生成最终剧本 ───────────────────────────────
+SCRIPT_PROMPT = """你是一个专业的技术科普短视频剧本作家。
+
+【任务】
+根据提供的"技术文档"和"选题规划"，生成完整的短视频对话剧本。
+剧本必须严格按照选题规划的3-4轮主题展开，严禁自行替换或注水。
+**最高指令**：单轮问答的总时长必须控制在20秒以内！所以文案必须极其精炼，短平快！
+
+【格式要求】
+
+1. 片头 Intro
+- theme_title：3-5字的极简主标题（直接提炼文章核心关键词，如"七大套件"、"架构三件套"）
+- theme_subtitle：带书名号的补充说明（如《1000万订单查询优化》）
+- audio：≤15字的打招呼开场，必须先问候再点题，例如："哈喽大家好，今天聊聊xxx" / "hello大家好，面试官问你xxx怎么破？"
+
+2. 正片 QA（3 到 4 轮，严格按选题规划）
+- question（bunny口播）：必须严格控制在 20 个字以内！一句话，单刀直入抛出痛点或反常识疑问
+- question_display：极简大字报，核心词用 <hl>关键词</hl>（≤5字）
+- answer（fox口播）：必须严格控制在 50 个字以内！务必精炼惜字如金！只讲干货，不能展开！
+  - 口语节奏：每≤10字加标点，多用"，"制造短停顿，增强网感
+  - 常用语气："其实啊"、"简单来说"、"核心在于"
+- answer_display：一句结论，核心词用 <hl>关键词</hl>
+- visual_type + visual_labels（必须精准匹配，见下方决策树）
+
+【visual_type 决策树】
+
+▸ "flow" → 数据/请求从A流向B的传递链路（如：请求→服务→DB）
+  labels: 3个节点名（按流向顺序）
+
+▸ "database" → 存储结构/缓存层级/多存储协同
+  labels: 2个存储对象（如：["Redis", "MySQL"]）
+
+▸ "speed" → 性能对比（延迟/吞吐量/QPS数字级别的差异）
+  labels: 2个对比项，左=慢，右=快
+
+▸ "code" → 具体API/配置语法/命令
+  labels: [指令名(≤10字符), 简短说明]
+
+▸ "compare" → 两套方案的优劣/取舍/新旧对比
+  labels: [左=旧/差, 右=新/好]
+
+▸ "layers" → 分层架构（从上到下有明确层次的体系）
+  labels: 3个层名（从上到下）
+
+▸ "tree" → 父子/依赖/分类/体系树
+  labels: [根节点, 左子, 右子]
+
+▸ "timeline" → 必须按顺序发生的步骤/时序
+  labels: 3个顺序步骤
+
+▸ "lock" → 鉴权/加密/安全/Token
+  labels: [机制名, 简短说明]
+
+labels 规范：每个词严格不超过4个字（宁可缩写也不写长词）
+❌ 错误: ["HBase行存点查", "ClickHouse列存分析"]  → 太长
+✅ 正确: ["HBase", "ClickHouse"] 或 ["行存点查", "列存分析"]
+
+3. 片尾 Outro
+- summary_display：2-3条核心知识点（高度概括）
+- audio：1-2句总结 + "关注我，获取更多面试资料和面试指导！"
+
+【输出格式】：纯 JSON 对象，可用 ```json 代码块。
+注意：所有字符串的 value 必须用双引号 `"` 包裹，不能因为中文字符缺失外层双引号。
 {
-    "intro": {
-        "theme_title": "极简震撼的主标题，如：今日对话 / 底层逻辑",
-        "theme_subtitle": "带书名号或陈述的副标，如：《什么是 RSC》",
-        "audio": "（fox发音用）自然的打招呼开场，如：hello大家好，今天咱们彻底把 RSC 盘明白！"
-    },
-    "qa": [
-        {
-            "name_q": "q1",
-            "question": "（bunny发音用满怀好奇的口吻）哎，我听说最近有个...",
-            "question_display": "听说的这个 <hl>新技术</hl> 是啥？",
-            "character_q": "bunny",
-            "name_a": "a1",
-            "answer": "（fox发音用轻松解答的口吻）哈哈，这个其实不复杂，简单来说就是...",
-            "answer_display": "就是前段渲染在 <hl>服务端</hl>",
-            "character_a": "fox",
-            "visual_type": "flow",
-            "visual_labels": ["客户端", "服务端", "DB"]
-        }
-    ],
-    "outro": {
-        "summary_display": "- 精简总结点一（最多2-3条，不要超过3条）\\n- 精简总结点二\\n- 精简总结点三（可选）",
-        "audio": "（bunny发音用）简短1-2句总结。关注我，获取更多面试资料和面试指导！"
+  "intro": {
+    "theme_title": "极简3-5字标题",
+    "theme_subtitle": "《补充说明》",
+    "audio": "≤15字打招呼开场"
+  },
+  "qa": [
+    {
+      "name_q": "q1", "question": "≤20字单刀直入提问",
+      "question_display": "极简大字 <hl>核心词</hl>",
+      "character_q": "bunny",
+      "name_a": "a1", "answer": "≤50字极简回答，必须克制字数",
+      "answer_display": "一句结论 <hl>关键词</hl>",
+      "character_a": "fox",
+      "visual_type": "layers",
+      "visual_labels": ["层A", "层B", "层C"]
     }
+  ],
+  "outro": {
+    "summary_display": "- 总结点一\\n- 总结点二\\n- 总结点三",
+    "audio": "简短总结。关注我，获取更多面试资料和面试指导！"
+  }
 }
 """
 
-def generate_script(input_text: str, output_path: str):
-    print(f"🔄 正在通过模型 [{MODEL}] 提取剧本...")
-    
+
+def analyze_document(input_text: str) -> str:
+    """Step 1：忠实于文章主旨，规划3轮QA选题。"""
+    print(f"  🔍 [Step 1/2] 分析文章主旨，规划剧本选题...")
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"请将以下文档转化为对话剧本:\n\n{input_text}"}
+            {"role": "system", "content": ANALYSIS_PROMPT},
+            {"role": "user", "content": f"请分析以下技术文档并规划剧本选题：\n\n{input_text}"}
+        ],
+        temperature=0.2,   # 分析任务用低温，确保忠实于文章主旨
+        max_tokens=1500
+    )
+    analysis = response.choices[0].message.content.strip()
+    print(f"  ✅ 选题规划完成")
+    return analysis
+
+
+def generate_script(input_text: str, output_path: str):
+    print(f"🔄 正在通过模型 [{MODEL}] 生成剧本...")
+
+    # ── Step 1：分析文章主旨，确定选题 ─────────────────────────────────────
+    analysis_report = analyze_document(input_text)
+
+    # ── Step 2：按选题规划生成剧本 ──────────────────────────────────────────
+    print(f"  ✍️  [Step 2/2] 按选题规划生成对话剧本...")
+    user_message = f"""请将以下技术文档转化为对话剧本。
+
+━━━━【文档内容】━━━━
+{input_text}
+
+━━━━【选题规划（必须严格遵守，禁止替换主题）】━━━━
+{analysis_report}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+约束：
+- QA的主题轮次（3到4轮） = 严格跟随选题规划，不得更换
+- Q2 必须呈现出解法体系的"结构感"
+- 直接输出 JSON，不输出分析过程
+"""
+
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": SCRIPT_PROMPT},
+            {"role": "user", "content": user_message}
         ],
         temperature=0.7,
         max_tokens=2048
     )
-    
+
     content = response.choices[0].message.content.strip()
-    
-    # 清理 markdown json code blocks (如果存在)
-    if content.startswith("```json"):
-        content = content[7:]
-    if content.endswith("```"):
-        content = content[:-3]
-    
+
+    # 清理 markdown json code blocks（支持多种包裹方式）
+    import re as _re
+    # 先尝试提取 ```json ... ``` 块
+    json_block = _re.search(r'```json\s*([\s\S]*?)```', content)
+    if json_block:
+        content = json_block.group(1).strip()
+    else:
+        # fallback：逐行去掉 ``` 围栏
+        for prefix in ("```json", "```"):
+            if content.startswith(prefix):
+                content = content[len(prefix):]
+        if content.endswith("```"):
+            content = content[:-3]
     content = content.strip()
-    
+
+    # 尝试修复《...》导致的 JSON 双引号缺失
+    content = _re.sub(r'"theme_subtitle":\s*《(.*?)》', r'"theme_subtitle": "《\1》"', content)
+    # 也可能出现在其它地方，泛型修复缺引号的《...》
+    content = _re.sub(r'(:\s*)《(.*?)》', r'\1"《\2》"', content)
+
     try:
         data = json.loads(content)
-        
-        # 确保输出目录存在
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
+
+        out_dir = os.path.dirname(output_path)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
+
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-            
+
+        qa_count = len(data.get("qa", []))
         print(f"✅ 成功生成剧本，已保存至 {output_path}")
-        print(f"   共 {len(data)} 个问答回合。")
+        print(f"   共 {qa_count} 个问答回合。")
         return data
-        
+
     except json.JSONDecodeError as e:
-        print(f"❌ 解析大模型返回的 JSON 失败:\n{e}\n\n大模型返回内容:\n{content}")
+        print(f"❌ 解析大模型返回的 JSON 失败:\n{e}")
+        debug_path = os.path.join(os.path.dirname(output_path) or ".", "debug_raw.txt")
+        with open(debug_path, "w", encoding="utf-8") as df:
+            df.write(content)
+        print(f"大模型返回内容已保存至: {debug_path}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="根据输入文档生成问答剧本 (JSON)")
     parser.add_argument("--input", "-i", type=str, required=True, help="输入的 markdown/txt 文件路径")
     parser.add_argument("--output", "-o", type=str, default="workspace/script.json", help="输出的 JSON 文件路径")
     args = parser.parse_args()
-    
+
     if not os.path.exists(args.input):
         print(f"❌ 找不到输入文件: {args.input}")
         sys.exit(1)
-        
+
     with open(args.input, "r", encoding="utf-8") as f:
         text = f.read()
 

@@ -36,6 +36,19 @@ export const OutroScene: React.FC<{
   });
   const bannerY = interpolate(bannerSlide, [0, 1], [150, 0]);
 
+  // 横幅上方文本蹦出放大效果 + 心跳脉冲
+  const bannerTextPop = spring({
+    fps,
+    frame: frame - fps * 1.2, // 横幅弹出后再弹出文字
+    config: { damping: 12, stiffness: 250 },
+  });
+  // 心跳幅度 0.02，在文字完全弹出后附加
+  const textScale = interpolate(bannerTextPop, [0, 1], [0.1, 1]) 
+      + (frame > fps * 1.5 ? Math.sin((frame - fps * 1.5) / 5) * 0.02 : 0);
+
+  // 一道反光的流光扫过横幅（基于帧的持续移动）
+  const sheenX = ((frame * 45) % 3500) - 800;
+
   return (
     <AbsoluteFill style={{ background: '#f5efe0', overflow: 'hidden', opacity }}>
       {/* 斜纹背景 */}
@@ -127,8 +140,24 @@ export const OutroScene: React.FC<{
           transform: `translateY(${bannerY}px)`,
           boxShadow: '0 -10px 40px rgba(245,157,11,0.3)',
           zIndex: 4,
+          overflow: 'hidden',
         }}
       >
+        {/* 高光横扫效果 (Sheen) */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: 400,
+            height: '100%',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+            transform: `skewX(-25deg) translateX(${sheenX}px)`,
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        />
+
         <div
           style={{
             fontSize: 62,
@@ -136,6 +165,9 @@ export const OutroScene: React.FC<{
             color: '#ffffff',
             fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
             letterSpacing: '0.05em',
+            zIndex: 2,
+            transform: `scale(${textScale})`,
+            filter: 'drop-shadow(0px 4px 8px rgba(0,0,0,0.1))',
           }}
         >
           关注我，获取更多面试资料和面试指导

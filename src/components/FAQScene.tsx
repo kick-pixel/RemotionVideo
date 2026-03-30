@@ -2,6 +2,7 @@ import React from 'react';
 import { Sequence, Audio, staticFile, useVideoConfig, AbsoluteFill, useCurrentFrame, interpolate, spring } from 'remotion';
 import { AnimatedText } from './AnimatedText';
 import { Character } from './Character';
+import { DynamicVisual } from './DynamicVisual';
 
 // --- Scene-in animation for the text block ---
 const SlideInLeft: React.FC<{ children: React.ReactNode; delay?: number }> = ({ children, delay = 0 }) => {
@@ -70,10 +71,12 @@ export const FAQScene: React.FC<{
   answer: string;
   qAudio: string;
   aAudio: string;
-  character: 'businessman' | 'book';
+  character: 'businessman' | 'book' | 'fox' | 'bunny';
   qDur: number;
   aDur: number;
-}> = ({ question, answer, qAudio, aAudio, qDur, aDur }) => {
+  visual_type?: string;
+  visual_labels?: string[];
+}> = ({ question, answer, qAudio, aAudio, qDur, aDur, visual_type = 'flow', visual_labels = [] }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -208,6 +211,8 @@ export const FAQScene: React.FC<{
               <AnimatedText text={answer} delay={8} align="left" />
             </SlideInLeft>
           </div>
+
+          <DynamicVisual type={visual_type} labels={visual_labels} />
 
           <Audio src={staticFile(aAudio)} />
         </AbsoluteFill>

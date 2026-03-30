@@ -103,8 +103,8 @@ async def main() -> None:
         print(f"   问    : fox  → {voice_q}")
         print(f"   答    : bunny→ {voice_a}")
     else:
-        print(f"   问    : fox  → {os.getenv('VOICE_FOX', 'zh-CN-YunxiNeural')}")
-        print(f"   答    : bunny→ {os.getenv('VOICE_BUNNY', 'zh-CN-XiaoxiaoNeural')}")
+        print(f"   问    : bunny→ {os.getenv('VOICE_BUNNY', 'zh-CN-XiaoxiaoNeural')}")
+        print(f"   答    : fox  → {os.getenv('VOICE_FOX', 'zh-CN-YunxiNeural')}")
     print(f"   剧本  : {args.input}")
     print(f"   输出  : {args.output}")
     total = len(qa_pairs) * 2 + (1 if intro_data else 0) + (1 if outro_data else 0)
@@ -137,13 +137,13 @@ async def main() -> None:
         if not ok:
             failed.append("intro")
         intro_dur = get_audio_duration_sec(str(OUTPUT_DIR / "intro.mp3"))
-        intro_frames = min(MAX_SCENE_FRAMES, max(30, int(intro_dur * FPS) + int(FPS * 0.5)))
+        intro_frames = max(30, int(intro_dur * FPS) + int(FPS * 0.5))
         render_props["theme"] = {
             **intro_data,
             "audioPath": "audio/intro.mp3",
             "durationFrames": intro_frames,
         }
-        print(f"  🎥  intro: {intro_dur:.2f}s → {intro_frames} frames (限制 5s)")
+        print(f"  🎥  intro: {intro_dur:.2f}s → {intro_frames} frames")
         
     # -- 生成片尾音频 (若存在) --
     if outro_data and "audio" in outro_data:
@@ -151,21 +151,21 @@ async def main() -> None:
         if not ok:
             failed.append("outro")
         outro_dur = get_audio_duration_sec(str(OUTPUT_DIR / "outro.mp3"))
-        outro_frames = min(MAX_SCENE_FRAMES, max(30, int(outro_dur * FPS) + int(FPS * 0.5)))
+        outro_frames = max(30, int(outro_dur * FPS) + int(FPS * 0.5))
         render_props["outro"] = {
             **outro_data,
             "audioPath": "audio/outro.mp3",
             "durationFrames": outro_frames,
         }
-        print(f"  🎥  outro: {outro_dur:.2f}s → {outro_frames} frames (限制 5s)")
+        print(f"  🎥  outro: {outro_dur:.2f}s → {outro_frames} frames")
 
     for item in qa_pairs:
         name_q = item["name_q"]
         name_a = item["name_a"]
         
-        # TTS 继续使用详细的长文本
-        q_ok = await generate_one(engine, name_q, item["character_q"], item["question"])
-        a_ok = await generate_one(engine, name_a, item["character_a"], item["answer"])
+        # 提问者是 bunny，回答者是 fox
+        q_ok = await generate_one(engine, name_q, "bunny", item["question"])
+        a_ok = await generate_one(engine, name_a, "fox", item["answer"])
 
         if not q_ok: failed.append(name_q)
         if not a_ok: failed.append(name_a)
@@ -177,11 +177,13 @@ async def main() -> None:
         render_props["dataWithDurations"].append({
             "question": item.get("question_display", item["question"]),
             "answer": item.get("answer_display", item["answer"]),
-            "character": "businessman" if item["character_q"] == "fox" else "book",
+            "character": "book" if item.get("character_q", "bunny") == "bunny" else "businessman",
             "qAudio": f"audio/{name_q}.mp3",
             "aAudio": f"audio/{name_a}.mp3",
             "qDur": q_dur,
             "aDur": a_dur,
+            "visual_type": item.get("visual_type", "flow"),
+            "visual_labels": item.get("visual_labels", []),
         })
 
     print("─" * 44)
@@ -195,13 +197,23 @@ async def main() -> None:
     total_frames = 0
     if render_props.get("theme", {}) and render_props["theme"].get("durationFrames"):
         total_frames += render_props["theme"]["durationFrames"]
+    
+    qa_count = len(render_props["dataWithDurations"])
     for qa in render_props["dataWithDurations"]:
         q_f = int(qa["qDur"] * FPS2)
         a_f = int(qa["aDur"] * FPS2)
         total_frames += q_f + int(FPS2 * 0.5) + a_f + int(FPS2 * 1.5)
+        
     if render_props.get("outro", {}) and render_props["outro"].get("durationFrames"):
         total_frames += render_props["outro"]["durationFrames"]
-    render_props["totalFrames"] = total_frames
+
+    # Subtract Series overlaps (-15 offset per QA scene + Outro scene)
+    overlap_count = qa_count
+    if render_props.get("outro", {}) and render_props["outro"].get("durationFrames"):
+        overlap_count += 1
+    total_frames -= (overlap_count * 15)
+
+    render_props["totalFrames"] = max(30, total_frames)
     print(f"  📊 总帧数: {total_frames} 帧 ({total_frames/FPS2:.1f}s)")
 
     # 写入最终的 render_props.json

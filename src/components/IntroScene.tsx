@@ -6,41 +6,46 @@ export const IntroScene: React.FC<{
   themeTitle: string;
   themeSubject: string;
   audioPath: string;
-}> = ({ themeTitle, themeSubject, audioPath }) => {
+}> = ({ themeSubject, audioPath }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // 第一层大字「今日对话」— 弹入速度极快（0~15 帧完成）
-  const popInTitle = spring({
+  // Strip brackets and compute a smaller font size if string is very long
+  const finalSubject = themeSubject.replace(/[《》]/g, '');
+  const subjectFontSize = finalSubject.length > 14 ? 75 : finalSubject.length > 8 ? 90 : 120;
+
+  // 1. 背景大字「今日对话」快速淡入
+  const titleEntrance = spring({
     fps,
     frame,
-    config: { damping: 14, stiffness: 300 }, // 更高 stiffness，更快弹入
+    config: { damping: 20, stiffness: 100 },
   });
 
-  // 0.4 秒（12 帧）后开始褪色放大成水印
-  const fadeBackProgress = spring({
+  // 2. 持续缓慢放大和拉开字间距作为动态水印
+  const bgProgress = spring({
     fps,
-    frame: frame - fps * 0.4,
-    config: { damping: 18, stiffness: 200 },
+    frame,
+    config: { damping: 200, stiffness: 10 }, 
   });
 
-  const titleScale   = interpolate(popInTitle, [0, 1], [0, 1]) + interpolate(fadeBackProgress, [0, 1], [0, 0.4]);
-  const titleOpacity = interpolate(fadeBackProgress, [0, 1], [1, 0.1]);
-  const titleY       = interpolate(fadeBackProgress, [0, 1], [0, -50]);
+  const titleScale   = interpolate(bgProgress, [0, 1], [1, 1.1]);
+  const titleOpacity = interpolate(titleEntrance, [0, 1], [0, 0.08]); // 根据入场动画淡入
+  const titleSpacing = interpolate(bgProgress, [0, 1], [0.05, 0.2]); // em
 
-  // 第二层副标题「《xxx》」— 0.5 秒后冲击弹出
+  // 3. 第二层副标题 — 在背景完全呈现后（0.8秒后）再优雅平滑升起
   const popInSubject = spring({
     fps,
-    frame: frame - fps * 0.5,
-    config: { damping: 10, stiffness: 250 },
+    frame: frame - fps * 0.8,
+    config: { damping: 14, stiffness: 150 },
   });
 
-  const subjectScale   = interpolate(popInSubject, [0, 1], [2.2, 1]);
+  const subjectScale   = interpolate(popInSubject, [0, 1], [0.8, 1]);
   const subjectOpacity = interpolate(popInSubject, [0, 1], [0, 1]);
+  const subjectY       = interpolate(popInSubject, [0, 1], [60, 0]);
 
   // 轻微呼吸抖动
-  const wobbleX = Math.sin(frame / 20) * 8;
-  const wobbleY = Math.cos(frame / 14) * 8;
+  const wobbleX = Math.sin(frame / 30) * 4;
+  const wobbleY = Math.cos(frame / 20) * 4;
 
   return (
     <AbsoluteFill style={{ background: '#f5efe0', overflow: 'hidden' }}>
@@ -80,18 +85,23 @@ export const IntroScene: React.FC<{
         <div
           style={{
             position: 'absolute',
-            fontSize: 220,
+            fontSize: 180,
             fontWeight: 900,
             fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
-            color: '#2a2118',
-            transform: `scale(${titleScale}) translateY(${titleY + wobbleY}px) translateX(${wobbleX}px)`,
+            color: '#1a1817',
+            transform: `scale(${titleScale}) translateY(${wobbleY}px) translateX(${wobbleX}px)`,
             opacity: titleOpacity,
-            whiteSpace: 'nowrap',
-            letterSpacing: '0.05em',
+            whiteSpace: 'normal',
+            lineHeight: 1.1,
+            wordBreak: 'keep-all',
+            textAlign: 'center',
+            width: '100vw',
+            padding: '0 40px',
+            letterSpacing: `${titleSpacing}em`,
             zIndex: 1,
           }}
         >
-          {themeTitle}
+          今日对话
         </div>
 
         {/* 前景冲击副标题 */}
@@ -99,19 +109,19 @@ export const IntroScene: React.FC<{
           <div
             style={{
               position: 'absolute',
-              fontSize: 140,
+              fontSize: subjectFontSize,
               fontWeight: 900,
               fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
-              color: '#f59d0b',
-              transform: `scale(${subjectScale})`,
+              color: '#1a1817', // High contrast dark bold
+              transform: `scale(${subjectScale}) translateY(${subjectY}px)`,
               opacity: subjectOpacity,
               whiteSpace: 'nowrap',
               zIndex: 2,
-              filter: 'drop-shadow(0px 16px 24px rgba(245,157,11,0.45))',
-              WebkitTextStroke: '5px #ffffff',
+              filter: 'drop-shadow(0px 12px 24px rgba(0,0,0,0.1)) drop-shadow(0px 4px 8px rgba(0,0,0,0.05))',
+              WebkitTextStroke: '2px rgba(255,255,255,0.5)',
             }}
           >
-            {themeSubject}
+            {finalSubject}
           </div>
         )}
       </div>

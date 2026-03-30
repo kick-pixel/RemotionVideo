@@ -3,9 +3,11 @@ export type QAData = {
   answer: string;
   qAudio: string;
   aAudio: string;
-  character: "businessman" | "book";
+  character: "businessman" | "book" | "fox" | "bunny";
   qDur?: number;
   aDur?: number;
+  visual_type?: "database" | "flow" | "speed" | "code" | "compare" | "layers" | "tree" | "timeline" | "lock" | string;
+  visual_labels?: string[];
 };
 
 export const faqData: QAData[] = [

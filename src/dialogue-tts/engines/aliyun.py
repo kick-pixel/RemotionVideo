@@ -58,8 +58,9 @@ class AliyunTTSEngine(TTSEngine):
                 audio_url = await asyncio.get_event_loop().run_in_executor(
                     None, self._call_api, text, voice
                 )
+                # 用 requests 下载，带超时避免卡死
                 await asyncio.get_event_loop().run_in_executor(
-                    None, urllib.request.urlretrieve, audio_url, str(wav_path)
+                    None, self._download_audio, audio_url, wav_path
                 )
                 return wav_path
 
@@ -74,6 +75,19 @@ class AliyunTTSEngine(TTSEngine):
             f"Aliyun TTS 失败（已重试 {MAX_RETRIES} 次）: {last_err}"
         )
 
+    def _download_audio(self, url: str, dest: Path) -> None:
+        """带超时的音频下载，避免大文件或网络抖动导致永久卡死。"""
+        try:
+            import requests
+            resp = requests.get(url, timeout=30, stream=True)
+            resp.raise_for_status()
+            with open(dest, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        except ImportError:
+            # 回退到标准库
+            urllib.request.urlretrieve(url, str(dest))
+
     def _call_api(self, text: str, voice: str) -> str:
         """
         同步调用 MultiModalConversation.call()，返回音频下载 URL。
@@ -84,6 +98,9 @@ class AliyunTTSEngine(TTSEngine):
         # 必须设置北京地域接入点（文档要求）
         dashscope.base_http_api_url = ALIYUN_BASE_HTTP_API_URL
 
+        # speech_rate：1.0 为正常语速，1.2 约等于 edge +20%
+        speech_rate = float(os.getenv("ALIYUN_SPEECH_RATE", "1.2"))
+
         # 组装参数（instruct 模型额外支持 instructions）
         call_kwargs: dict = dict(
             model=self.model,
@@ -91,6 +108,7 @@ class AliyunTTSEngine(TTSEngine):
             text=text,
             voice=voice,
             language_type="Chinese",   # 与文本语种一致，获得正确发音和语调
+            speech_rate=speech_rate,
             stream=False,
         )
         if self.instructions and "instruct" in self.model:

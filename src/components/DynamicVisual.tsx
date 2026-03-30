@@ -22,7 +22,7 @@ const FlowVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
       />
       {[0, 1, 2].map((i) => {
         const floatY = Math.sin((frame + i * 20) / (20 + i * 5)) * 10;
-        const nodeIn = spring({ fps, frame: frame - i * 8, config: { damping: 14, stiffness: 160 } });
+        const nodeIn = spring({ fps, frame: frame - i * 8, config: { damping: 11, stiffness: 180 } });
         return (
           <div
             key={i}
@@ -76,9 +76,10 @@ const SpeedVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
   const leftLabel = labels[0] || 'OLD';
   const rightLabel = labels[1] || 'NEW';
   const rotate = Math.sin(frame / 10) * 70;
+  const floatY = useFloat(8, 25);
 
   return (
-    <div className="relative flex flex-col items-center justify-center w-64 h-64 mt-20">
+    <div className="relative flex flex-col items-center justify-center w-64 h-64 mt-20" style={{ transform: `translateY(${floatY}px)` }}>
       <div className="absolute inset-0 border-[16px] border-[#dcd4c3] rounded-full shadow-inner" style={{ borderBottomColor: 'transparent', transform: 'rotate(45deg)' }} />
       <div className="absolute inset-0 border-[16px] border-[#c8b89a] rounded-full opacity-60" style={{ borderBottomColor: 'transparent', borderRightColor: 'transparent', transform: 'rotate(-45deg)' }} />
       <div className="absolute top-1/2 left-1/2 w-2 h-32 -mt-32 -ml-1 origin-bottom" style={{ transform: `rotate(${rotate}deg)` }}>
@@ -120,14 +121,15 @@ const CompareVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
   const rightLabel = labels[1] || '新方案';
   const leftSubLabel = labels[2] || '';
 
-  const leftIn = spring({ fps, frame: frame - 5, config: { damping: 14, stiffness: 140 } });
-  const rightIn = spring({ fps, frame: frame - 15, config: { damping: 14, stiffness: 140 } });
-  const dividerIn = spring({ fps, frame: frame - 10, config: { damping: 20, stiffness: 200 } });
+  const leftIn = spring({ fps, frame: frame - 5, config: { damping: 11, stiffness: 180 } });
+  const rightIn = spring({ fps, frame: frame - 15, config: { damping: 11, stiffness: 180 } });
+  const dividerIn = spring({ fps, frame: frame - 10, config: { damping: 15, stiffness: 220 } });
 
   const pulse = 1 + Math.sin(frame / 12) * 0.03;
+  const floatY = useFloat(12, 22);
 
   return (
-    <div className="flex items-stretch gap-0 relative h-52 w-[480px]">
+    <div className="flex items-stretch gap-0 relative h-52 w-[480px]" style={{ transform: `translateY(${floatY}px)` }}>
       {/* Left card — old/slow */}
       <div
         className="flex-1 flex flex-col items-center justify-center bg-[#262322] text-[#f5efe0] rounded-l-2xl p-6 shadow-xl"
@@ -172,7 +174,7 @@ const LayersVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
   return (
     <div className="flex flex-col-reverse items-center gap-2 mt-8" style={{ perspective: '600px' }}>
       {[0, 1, 2].map((i) => {
-        const layerIn = spring({ fps, frame: frame - i * 10, config: { damping: 14, stiffness: 130 } });
+        const layerIn = spring({ fps, frame: frame - i * 10, config: { damping: 11, stiffness: 160 } });
         const floatY = Math.sin((frame + i * 30) / 25) * 5;
         const width = 360 - i * 40;
         return (
@@ -205,12 +207,14 @@ const TreeVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
   const leftLabel = labels[1] || 'Child A';
   const rightLabel = labels[2] || 'Child B';
 
-  const rootIn = spring({ fps, frame, config: { damping: 14, stiffness: 160 } });
-  const treeIn = spring({ fps, frame: frame - 15, config: { damping: 14, stiffness: 140 } });
-  const linesIn = spring({ fps, frame: frame - 8, config: { damping: 20, stiffness: 120 } });
+  const rootIn = spring({ fps, frame, config: { damping: 11, stiffness: 180 } });
+  const treeIn = spring({ fps, frame: frame - 15, config: { damping: 11, stiffness: 160 } });
+  const linesIn = spring({ fps, frame: frame - 8, config: { damping: 15, stiffness: 140 } });
+
+  const floatY = useFloat(10, 28);
 
   return (
-    <div className="relative flex flex-col items-center" style={{ width: 400, height: 260 }}>
+    <div className="relative flex flex-col items-center" style={{ width: 400, height: 260, transform: `translateY(${floatY}px)` }}>
       {/* Root node */}
       <div
         className="bg-[#262322] text-[#f5efe0] font-black text-2xl px-8 py-4 rounded-2xl shadow-xl border-4 border-[#262322] z-10"
@@ -256,7 +260,7 @@ const TimelineVisual: React.FC<{ labels: string[] }> = ({ labels }) => {
       <div className="absolute top-1/2 left-4 right-4 h-1 bg-[#dcd4c3]" style={{ transform: 'translateY(-50%)' }} />
 
       {[0, 1, 2].map((i) => {
-        const nodeIn = spring({ fps, frame: frame - i * 12, config: { damping: 14, stiffness: 180 } });
+        const nodeIn = spring({ fps, frame: frame - i * 12, config: { damping: 12, stiffness: 200 } });
         const pulse = 1 + Math.max(0, Math.sin((frame - i * 12) / 8) * 0.2) * (nodeIn > 0.9 ? 1 : 0);
         const x = 80 + i * 150;
         const labelTop = i % 2 === 0; // Alternate label position

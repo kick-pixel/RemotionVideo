@@ -28,11 +28,15 @@ class EdgeTTSEngine(TTSEngine):
         voice = self.voices.get(speaker, DEFAULT_VOICES["fox"])
         mp3_path = output_path.with_suffix(".mp3")
 
+        # 角色差异化参数：bunny 调高校正甜美感，fox 调低增加沉稳感
+        pitch = "+5Hz" if speaker == "bunny" else "-5Hz"
+        volume = "+5%" if speaker == "bunny" else "+15%"
+
         last_err: Exception | None = None
         for attempt in range(MAX_RETRIES):
             try:
-                # 增加 '+15%' 的语速，让语气更连贯、更有播客的活力感
-                communicate = edge_tts.Communicate(text, voice, rate="+15%")
+                # 增加 '+20%' 的语速，让语气更连贯、更有播客的活力感
+                communicate = edge_tts.Communicate(text, voice, rate="+20%", pitch=pitch, volume=volume)
                 await communicate.save(str(mp3_path))
                 return mp3_path
             except Exception as e:

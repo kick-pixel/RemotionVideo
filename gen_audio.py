@@ -26,7 +26,7 @@ import argparse
 # ── 1. 加载 .env（必须在所有 import 之前）────────────────────────────
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)
 except ImportError:
     print("⚠️  python-dotenv 未安装，跳过 .env 自动加载")
     print("   安装: pip install python-dotenv\n")
@@ -98,10 +98,10 @@ async def main() -> None:
     if engine_type == "aliyun":
         model = os.getenv("ALIYUN_TTS_MODEL", "qwen3-tts-flash")
         print(f"   模型  : {model}")
-        voice_q = os.getenv("ALIYUN_VOICE_FOX", "Ethan")
-        voice_a = os.getenv("ALIYUN_VOICE_BUNNY", "Cherry")
-        print(f"   问    : fox  → {voice_q}")
-        print(f"   答    : bunny→ {voice_a}")
+        voice_q = os.getenv("ALIYUN_VOICE_BUNNY", "Cherry")
+        voice_a = os.getenv("ALIYUN_VOICE_FOX", "Ethan")
+        print(f"   问    : bunny→ {voice_q}")
+        print(f"   答    : fox  → {voice_a}")
     else:
         print(f"   问    : bunny→ {os.getenv('VOICE_BUNNY', 'zh-CN-XiaoxiaoNeural')}")
         print(f"   答    : fox  → {os.getenv('VOICE_FOX', 'zh-CN-YunxiNeural')}")

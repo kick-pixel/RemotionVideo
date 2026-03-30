@@ -65,12 +65,13 @@ export const AnimatedText: React.FC<{
                     const appear = spring({
                       fps,
                       frame: frame - startFrame,
-                      config: { damping: 14, stiffness: 200 },
+                      // Damping is decreased for higher bounce, mass lowered for snappiness
+                      config: { damping: 11, stiffness: 260, mass: 0.8 },
                     });
 
-                    const y = interpolate(appear, [0, 1], [30, 0]);
+                    const y = interpolate(appear, [0, 1], [40, 0]);
                     const scale = isHighlight
-                      ? interpolate(appear, [0, 1], [0.6, 1])
+                      ? interpolate(appear, [0, 1], [0.4, 1])
                       : interpolate(appear, [0, 1], [0.8, 1]);
 
                     return (
@@ -81,9 +82,9 @@ export const AnimatedText: React.FC<{
                           opacity: appear,
                           transform: `translateY(${y}px) scale(${scale})`,
                           transformOrigin: 'bottom center',
-                          // Highlighted chars get a subtle text shadow for pop
+                          // Highlighted chars get a stronger glow effect
                           textShadow: isHighlight
-                            ? '0 2px 12px rgba(245,157,11,0.30)'
+                            ? '0 4px 16px rgba(245,157,11,0.6)'
                             : 'none',
                           // 若当前是空格，保留极小的包裹尺寸防止吃掉空格
                           minWidth: char === ' ' ? '0.3em' : 'auto',
